@@ -5,7 +5,28 @@ import { getDeploymentInfo } from "@/lib/deployment";
 
 export const dynamic = "force-dynamic";
 
-function getServerTimezone(): string {
+interface IPGeoResponse {
+  status: string;
+  timezone?: string;
+}
+
+async function detectTimezone(): Promise<string> {
+  // 1. Try IP geolocation (detects actual server location, not OS timezone)
+  try {
+    const res = await fetch("http://ip-api.com/json/?fields=timezone", {
+      next: { revalidate: 3600 },
+    });
+    if (res.ok) {
+      const data: IPGeoResponse = await res.json();
+      if (data.status === "success" && data.timezone) {
+        return data.timezone;
+      }
+    }
+  } catch {
+    // fall through
+  }
+
+  // 2. Fallback to OS timezone
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
@@ -14,14 +35,14 @@ function getServerTimezone(): string {
 }
 
 export default async function Home() {
-  const [serverInfo, health, weather, deployment] = await Promise.all([
-    getServerInfo(),
-    getHealthStatus(),
-    getWeather(),
-    getDeploymentInfo(),
-  ]);
-
-  const serverTimezone = getServerTimezone();
+  const [serverInfo, health, weather, deployment, serverTimezone] =
+    await Promise.all([
+      getServerInfo(),
+      getHealthStatus(),
+      getWeather(),
+      getDeploymentInfo(),
+      detectTimezone(),
+    ]);
 
   return (
     <Dashboard
