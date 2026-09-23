@@ -137,7 +137,7 @@ export function ServerStatus({ health, server }: ServerStatusProps) {
 
   return (
     <div
-      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi flex flex-col"
+      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi flex flex-col h-full"
       style={{ padding: "clamp(16px, 1.8vw, 24px)" }}
     >
       {/* Eyebrow */}
@@ -156,7 +156,7 @@ export function ServerStatus({ health, server }: ServerStatusProps) {
 
       {/* Status Hero */}
       <div
-        className="relative flex flex-col items-center justify-center text-center"
+        className="relative flex-1 flex flex-col items-center justify-center text-center"
         style={{
           padding: "clamp(22px,3vh,40px) 8px clamp(18px,2.4vh,30px)",
         }}
@@ -222,7 +222,7 @@ export function ServerStatus({ health, server }: ServerStatusProps) {
         />
 
         {/* Metrics */}
-        <div className="relative grid grid-cols-3 gap-2 w-full mt-4 bg-surface-2 border border-border rounded-[10px] py-3 px-2">
+        <div className="relative grid grid-cols-3 gap-2 w-full mt-4 bg-surface-2 border border-border rounded-[10px] py-3 px-2 dashboard-metrics-grid">
           {/* Response */}
           <div className="text-center min-w-0">
             <div

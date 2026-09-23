@@ -16,7 +16,7 @@ export function DeploymentInfoCard({
 
   return (
     <div
-      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi"
+      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi h-full"
       style={{ padding: "clamp(16px, 1.8vw, 24px)" }}
     >
       {/* Eyebrow */}

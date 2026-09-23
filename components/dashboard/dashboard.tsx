@@ -39,6 +39,7 @@ interface DashboardProps {
   server: ServerInfo;
   weather: WeatherData | null;
   deployment: DeploymentInfo;
+  serverTimezone: string;
 }
 
 export function Dashboard({
@@ -46,6 +47,7 @@ export function Dashboard({
   server,
   weather,
   deployment,
+  serverTimezone,
 }: DashboardProps) {
   const [data, setData] = useState({ health, server, weather, deployment });
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -118,6 +120,26 @@ export function Dashboard({
 
   return (
     <div className="min-h-screen flex justify-center items-start p-[clamp(14px,3.5vh,44px)_clamp(12px,3vw,40px)]">
+      {/* Responsive overrides for ≤640px (Tailwind sm: doesn't support max-width) */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 640px) {
+          .dashboard-metrics-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .dashboard-metrics-grid > :nth-child(3) {
+            grid-column: span 2;
+            border-left: 0 !important;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+          }
+          .dashboard-metrics-grid > :nth-child(2) {
+            border-left: 1px solid var(--border) !important;
+          }
+          .dashboard-rt-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}} />
       <div className="shell">
         {/* ── Toolbar ── */}
         <header className="toolbar">
@@ -222,29 +244,29 @@ export function Dashboard({
           <Header status={data.health.status} />
 
           {/* Grid */}
-          <div className="grid grid-cols-12 gap-[var(--gap)]">
+          <div className="grid grid-cols-12 gap-[14px]">
             {/* Status — 7 cols on desktop */}
-            <div className="col-span-12 lg:col-span-7">
+            <div className="col-span-12 lg:col-span-7 min-h-0 h-full">
               <ServerStatus health={data.health} server={data.server} />
             </div>
 
             {/* Clock — 5 cols on desktop */}
-            <div className="col-span-12 lg:col-span-5">
-              <ServerClock />
+            <div className="col-span-12 lg:col-span-5 min-h-0 h-full">
+              <ServerClock timezone={serverTimezone} />
             </div>
 
             {/* Weather — 4 cols on desktop, 6 on tablet */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-4">
+            <div className="col-span-12 md:col-span-6 lg:col-span-4 min-h-0 h-full">
               <WeatherCard weather={data.weather} />
             </div>
 
             {/* Deployment — 4 cols on desktop, 6 on tablet */}
-            <div className="col-span-12 md:col-span-6 lg:col-span-4">
+            <div className="col-span-12 md:col-span-6 lg:col-span-4 min-h-0 h-full">
               <DeploymentInfoCard deployment={data.deployment} />
             </div>
 
             {/* Runtime — 4 cols on desktop, full on tablet */}
-            <div className="col-span-12 lg:col-span-4">
+            <div className="col-span-12 lg:col-span-4 min-h-0 h-full">
               <RuntimeInfo server={data.server} />
             </div>
 

@@ -5,6 +5,14 @@ import { getDeploymentInfo } from "@/lib/deployment";
 
 export const dynamic = "force-dynamic";
 
+function getServerTimezone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return "UTC";
+  }
+}
+
 export default async function Home() {
   const [serverInfo, health, weather, deployment] = await Promise.all([
     getServerInfo(),
@@ -13,12 +21,15 @@ export default async function Home() {
     getDeploymentInfo(),
   ]);
 
+  const serverTimezone = getServerTimezone();
+
   return (
     <Dashboard
       health={health}
       server={serverInfo}
       weather={weather}
       deployment={deployment}
+      serverTimezone={serverTimezone}
     />
   );
 }

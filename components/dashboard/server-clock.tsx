@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 
-function formatTime(date: Date): string {
+function formatTime(date: Date, tz: string): string {
   return date.toLocaleTimeString("en-GB", {
+    timeZone: tz,
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -11,35 +12,37 @@ function formatTime(date: Date): string {
   });
 }
 
-function formatWeekday(date: Date): string {
+function formatWeekday(date: Date, tz: string): string {
   return date.toLocaleDateString("en-US", {
+    timeZone: tz,
     weekday: "long",
   });
 }
 
-function formatDate(date: Date): string {
+function formatDate(date: Date, tz: string): string {
   return date.toLocaleDateString("en-US", {
+    timeZone: tz,
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function getTimezoneInfo(): string {
+function getUtcOffset(tz: string): string {
   try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const offset = new Date().getTimezoneOffset();
-    const sign = offset <= 0 ? "+" : "-";
-    const absOffset = Math.abs(offset);
-    const hours = String(Math.floor(absOffset / 60)).padStart(2, "0");
-    const minutes = String(absOffset % 60).padStart(2, "0");
-    return `${tz} \u00b7 UTC${sign}${hours}:${minutes}`;
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      timeZoneName: "shortOffset",
+    }).formatToParts(now);
+    const tzPart = parts.find((p) => p.type === "timeZoneName");
+    return tzPart?.value ?? "";
   } catch {
     return "";
   }
 }
 
-export function ServerClock() {
+export function ServerClock({ timezone }: { timezone: string }) {
   const [now, setNow] = useState<Date>(() => new Date());
 
   useEffect(() => {
@@ -47,14 +50,15 @@ export function ServerClock() {
     return () => clearInterval(id);
   }, []);
 
-  const timezone = useMemo(() => getTimezoneInfo(), []);
+  const utcOffset = useMemo(() => getUtcOffset(timezone), [timezone]);
+  const tzLabel = utcOffset ? `${timezone} \u00b7 ${utcOffset}` : timezone;
 
-  const weekday = formatWeekday(now);
-  const dateStr = formatDate(now);
+  const weekday = formatWeekday(now, timezone);
+  const dateStr = formatDate(now, timezone);
 
   return (
     <div
-      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi flex flex-col"
+      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi flex flex-col h-full"
       style={{ padding: "clamp(16px, 1.8vw, 24px)" }}
     >
       {/* Eyebrow */}
@@ -97,7 +101,7 @@ export function ServerClock() {
             color: "transparent",
           }}
         >
-          {formatTime(now)}
+          {formatTime(now, timezone)}
         </time>
 
         {/* Rule */}
@@ -123,7 +127,7 @@ export function ServerClock() {
           >
             {dateStr}
           </div>
-          {timezone && (
+          {tzLabel && (
             <div
               className="text-faint mt-3"
               style={{
@@ -132,7 +136,7 @@ export function ServerClock() {
                 letterSpacing: ".08em",
               }}
             >
-              {timezone}
+              {tzLabel}
             </div>
           )}
         </div>

@@ -28,7 +28,7 @@ export function RuntimeInfo({ server }: { server: ServerInfo }) {
 
   return (
     <div
-      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi"
+      className="relative bg-surface border border-border rounded-[12px] min-w-0 overflow-hidden transition-[border-color] duration-200 hover:border-border-hi h-full"
       style={{ padding: "clamp(16px, 1.8vw, 24px)" }}
     >
       {/* Eyebrow */}
@@ -47,7 +47,7 @@ export function RuntimeInfo({ server }: { server: ServerInfo }) {
 
       {/* 2-column grid */}
       <div
-        className="grid gap-0 mt-3"
+        className="grid gap-0 mt-3 dashboard-rt-grid"
         style={{ gridTemplateColumns: "1fr 1fr", gap: "0 20px" }}
       >
         {metrics.map((metric) => (
