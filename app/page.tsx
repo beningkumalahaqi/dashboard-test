@@ -11,14 +11,22 @@ interface IPGeoResponse {
 }
 
 async function detectTimezone(): Promise<string> {
-  // 1. Try IP geolocation (detects actual server location, not OS timezone)
+  // 1. Explicit env var override (most reliable)
+  const envTz = process.env.TIMEZONE;
+  if (envTz) return envTz;
+
+  // 2. Try IP geolocation (detects actual server location, not OS timezone)
   try {
-    const res = await fetch("http://ip-api.com/json/?fields=timezone", {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch("https://ipapi.co/json/", {
+      signal: controller.signal,
       next: { revalidate: 3600 },
     });
+    clearTimeout(timeout);
     if (res.ok) {
-      const data: IPGeoResponse = await res.json();
-      if (data.status === "success" && data.timezone) {
+      const data = await res.json();
+      if (data.timezone) {
         return data.timezone;
       }
     }
@@ -26,7 +34,7 @@ async function detectTimezone(): Promise<string> {
     // fall through
   }
 
-  // 2. Fallback to OS timezone
+  // 3. Fallback to OS timezone
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   } catch {
