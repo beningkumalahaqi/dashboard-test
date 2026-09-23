@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-shell: var(--shell);
+  --color-border: var(--border);
+  --color-border-hi: var(--border-hi);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-press-bg: var(--press-bg);
+  --color-traffic-red: #ff5f57;
+  --color-traffic-yellow: #febc2e;
+  --color-traffic-green: #28c840;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Tokens: Light ────────────────────────────────────── */
+:root {
+  --bg:        oklch(96% 0.005 90);
+  --shell:     oklch(99% 0.003 92);
+  --surface:   oklch(100% 0.002 95);
+  --surface-2: oklch(97.2% 0.005 90);
+  --fg:        oklch(20% 0.018 70);
+  --muted:     oklch(48% 0.012 70);
+  --faint:     oklch(62% 0.01 75);
+  --border:    oklch(90% 0.006 95);
+  --border-hi: oklch(85% 0.008 90);
+  --accent:    oklch(62.3% 0.214 260);
+  --accent-soft: color-mix(in oklch, var(--accent) 12%, transparent);
+  --ok:        oklch(62.7% 0.17 149);
+  --ok-soft:   color-mix(in oklch, var(--ok) 14%, transparent);
+  --warn:      oklch(66.6% 0.155 58);
+  --danger:    oklch(54.8% 0.212 27.5);
+  --shadow:    0 1px 2px oklch(20% 0.02 70 / .05),
+               0 28px 70px -28px oklch(20% 0.02 70 / .22);
+  --press-bg:  color-mix(in oklch, var(--fg) 5%, transparent);
+
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --r-shell: 14px;
+  --r-panel: 12px;
+  --gap: 14px;
+}
+
+/* ── Tokens: Dark ─────────────────────────────────────── */
+html[data-theme="dark"] {
+  --bg:        oklch(15% 0.012 260);
+  --shell:     oklch(12% 0.012 260);
+  --surface:   oklch(18.5% 0.014 260);
+  --surface-2: oklch(16% 0.013 260);
+  --fg:        oklch(93% 0.005 260);
+  --muted:     oklch(64% 0.012 260);
+  --faint:     oklch(52% 0.012 260);
+  --border:    oklch(28% 0.015 260);
+  --border-hi: oklch(36% 0.018 260);
+  --accent:    oklch(66% 0.16 255);
+  --accent-soft: color-mix(in oklch, var(--accent) 12%, transparent);
+  --ok:        oklch(68% 0.16 150);
+  --ok-soft:   color-mix(in oklch, var(--ok) 14%, transparent);
+  --warn:      oklch(72% 0.15 70);
+  --danger:    oklch(63% 0.19 25);
+  --shadow:    0 1px 2px oklch(0% 0 0 / .4),
+               0 32px 80px -30px oklch(0% 0 0 / .7);
+  --press-bg:  oklch(100% 0 0 / 6%);
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  transition: background-color .3s ease, color .3s ease;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── Shell & Toolbar ──────────────────────────────────── */
+.shell {
+  width: 100%;
+  max-width: 1280px;
+  background: var(--shell);
+  border: 1px solid var(--border);
+  border-radius: var(--r-shell);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  transition: background .3s ease, border-color .3s ease;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklch, var(--surface) 72%, transparent);
+  user-select: none;
+}
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes glow-breathe {
+  0%, 100% { opacity: .10; }
+  50%      { opacity: .26; }
+}
+
+@keyframes breathe-dot {
+  0%, 100% { box-shadow: 0 0 0 3px var(--ok-soft); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in oklch, var(--ok) 8%, transparent); }
+}
+
+@keyframes ripple {
+  0%   { transform: scale(.6); opacity: .9; }
+  70%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cal-out {
+  to { opacity: 0; transform: translateY(var(--cal-dir, 6px)); }
+}
+
+@keyframes cal-in {
+  from { opacity: 0; transform: translateY(calc(var(--cal-dir, 6px) * -1)); }
+}
+
+/* ── Reduced Motion ───────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }

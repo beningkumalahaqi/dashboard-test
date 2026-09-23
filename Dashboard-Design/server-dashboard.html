@@ -1,0 +1,971 @@
+
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server Dashboard</title>
+<style>
+/* ============================================================
+   SERVER DASHBOARD — tokens
+   Direction: editorial-monocle neutrals · electric-blue accent
+   ============================================================ */
+:root {
+  /* light — editorial paper + ink */
+  --bg:        oklch(96% 0.005 90);
+  --shell:     oklch(99% 0.003 92);
+  --surface:   oklch(100% 0.002 95);
+  --surface-2: oklch(97.2% 0.005 90);
+  --fg:        oklch(20% 0.018 70);
+  --muted:     oklch(48% 0.012 70);
+  --faint:     oklch(62% 0.01 75);
+  --border:    oklch(90% 0.006 95);
+  --border-hi: oklch(85% 0.008 90);
+  --accent:    oklch(62.3% 0.214 260);      /* #3B82F6 */
+  --accent-soft: color-mix(in oklch, var(--accent) 12%, transparent);
+  --ok:        oklch(62.7% 0.17 149);       /* #16A34A */
+  --ok-soft:   color-mix(in oklch, var(--ok) 14%, transparent);
+  --warn:      oklch(66.6% 0.155 58);       /* #D97706 */
+  --danger:    oklch(54.8% 0.212 27.5);     /* #DC2626 */
+  --shadow:    0 1px 2px oklch(20% 0.02 70 / .05),
+               0 28px 70px -28px oklch(20% 0.02 70 / .22);
+  --press-bg:  color-mix(in oklch, var(--fg) 5%, transparent);
+
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+  --font-body:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --r-shell: 14px;
+  --r-panel: 12px;
+  --gap: 14px;
+}
+html[data-theme="dark"] {
+  --bg:        oklch(15% 0.012 260);
+  --shell:     oklch(12% 0.012 260);
+  --surface:   oklch(18.5% 0.014 260);
+  --surface-2: oklch(16% 0.013 260);
+  --fg:        oklch(93% 0.005 260);
+  --muted:     oklch(64% 0.012 260);
+  --faint:     oklch(52% 0.012 260);
+  --border:    oklch(28% 0.015 260);
+  --border-hi: oklch(36% 0.018 260);
+  --accent:    oklch(66% 0.16 255);
+  --ok:        oklch(68% 0.16 150);
+  --warn:      oklch(72% 0.15 70);
+  --danger:    oklch(63% 0.19 25);
+  --shadow:    0 1px 2px oklch(0% 0 0 / .4),
+               0 32px 80px -30px oklch(0% 0 0 / .7);
+  --press-bg:  oklch(100% 0 0 / 6%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  transition: background .3s ease;
+}
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+
+/* ---------- shell ---------- */
+.stage {
+  min-height: 100%;
+  padding: clamp(14px, 3.5vh, 44px) clamp(12px, 3vw, 40px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.app {
+  width: 100%;
+  max-width: 1280px;
+  background: var(--shell);
+  border: 1px solid var(--border);
+  border-radius: var(--r-shell);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  transition: background .3s ease, border-color .3s ease;
+}
+
+/* ---------- toolbar ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklch, var(--surface) 72%, transparent);
+  user-select: none;
+}
+.lights { display: flex; gap: 7px; flex-shrink: 0; }
+.light {
+  width: 11px; height: 11px; border-radius: 50%;
+  border: .5px solid oklch(0% 0 0 / .12);
+}
+.light.r { background: #ff5f57; }
+.light.y { background: #febc2e; }
+.light.g { background: #28c840; }
+.toolbar-title {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--muted);
+}
+.toolbar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+.tbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  font-size: 12px;
+  color: var(--muted);
+  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .1s ease;
+}
+.tbtn:hover { background: var(--press-bg); color: var(--fg); border-color: var(--border); }
+.tbtn:active { transform: scale(.96); }
+.tbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tbtn svg { display: block; }
+.tbtn.spin svg { animation: spin .7s cubic-bezier(.4,0,.2,1); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* appearance popover */
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 168px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 10px 34px -8px oklch(20% 0.02 70 / .25), 0 2px 8px oklch(20% 0.02 70 / .08);
+  padding: 5px;
+  z-index: 40;
+  opacity: 0;
+  transform: translateY(-4px) scale(.98);
+  pointer-events: none;
+  transition: opacity .16s ease, transform .16s ease;
+}
+html[data-theme="dark"] .popover { box-shadow: 0 14px 40px -8px oklch(0% 0 0 / .6); }
+.popover.open { opacity: 1; transform: none; pointer-events: auto; }
+.popover-label {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  padding: 7px 9px 5px;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--fg);
+  transition: background .12s ease;
+}
+.opt:hover { background: var(--press-bg); }
+.opt .tick {
+  width: 14px; flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0;
+  font-size: 11px;
+}
+.opt[aria-checked="true"] .tick { opacity: 1; }
+
+/* ---------- body / header ---------- */
+.app-body { padding: clamp(18px, 2.4vw, 30px) clamp(16px, 2.4vw, 30px) clamp(20px, 2.6vw, 32px); }
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: clamp(18px, 2.2vw, 26px);
+  flex-wrap: wrap;
+}
+.page-header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  line-height: 1.1;
+}
+.page-header .sub { font-size: 14px; color: var(--muted); margin-top: 5px; }
+.op-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 7px 12px 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  white-space: nowrap;
+}
+.op-pill .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px var(--ok-soft);
+  animation: breathe-dot 3.2s ease-in-out infinite;
+}
+@keyframes breathe-dot {
+  0%, 100% { box-shadow: 0 0 0 3px var(--ok-soft); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in oklch, var(--ok) 8%, transparent); }
+}
+
+/* ---------- grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--gap);
+}
+.panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-panel);
+  padding: clamp(16px, 1.8vw, 24px);
+  min-width: 0;
+  overflow: hidden;
+  transition: border-color .2s ease, background .3s ease;
+}
+.panel:hover { border-color: var(--border-hi); }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.rule { height: 1px; background: var(--border); border: 0; }
+
+/* ---------- status panel ---------- */
+.p-status { grid-column: span 7; display: flex; flex-direction: column; }
+.status-hero {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(22px, 3vh, 40px) 8px clamp(18px, 2.4vh, 30px);
+}
+.glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: clamp(200px, 34%, 280px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -54%);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    color-mix(in oklch, var(--ok) 60%, transparent) 0%,
+    transparent 68%);
+  filter: blur(34px);
+  opacity: 0;
+  animation: glow-breathe 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glow-breathe {
+  0%, 100% { opacity: .10; }
+  50%      { opacity: .26; }
+}
+.status-dot {
+  position: relative;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 12px color-mix(in oklch, var(--ok) 55%, transparent);
+  animation: breathe-dot 3.2s ease-in-out infinite;
+}
+.status-dot::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in oklch, var(--ok) 45%, transparent);
+  animation: ripple 3.2s ease-out infinite;
+}
+@keyframes ripple {
+  0%   { transform: scale(.6); opacity: .9; }
+  70%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.status-word {
+  position: relative;
+  font-family: var(--font-display);
+  font-size: clamp(34px, 3.4vw, 44px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-top: 18px;
+}
+.status-sub { position: relative; font-size: 14px; color: var(--muted); margin-top: 7px; }
+.status-hero .rule { width: 100%; margin-top: clamp(20px, 3vh, 32px); }
+.metrics {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 8px;
+}
+.metric { text-align: center; min-width: 0; }
+.metric + .metric { border-left: 1px solid var(--border); }
+.metric .k {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.metric .v {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+.metric .v .unit { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 1px; }
+
+.graph-block { position: relative; margin-top: 16px; }
+.graph-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.graph-head span {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.graph-head .now { color: var(--muted); letter-spacing: .06em; }
+#spark { display: block; width: 100%; height: 64px; }
+#spark .line { fill: none; stroke: var(--accent); stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; opacity: .85; }
+#spark .area { fill: url(#areaFill); }
+#spark .base { stroke: var(--border); stroke-width: 1; }
+
+/* ---------- clock panel ---------- */
+.p-clock { grid-column: span 5; display: flex; flex-direction: column; }
+.clock-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(14px, 2vh, 26px) 0 4px;
+}
+.clock {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 5.6vw, 78px);
+  font-weight: 200;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  background: linear-gradient(180deg, var(--fg) 30%, color-mix(in oklch, var(--fg) 55%, var(--muted)) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.clock-meta { margin-top: clamp(16px, 2.4vh, 26px); }
+.clock-weekday { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.clock-date { font-size: 14px; color: var(--muted); margin-top: 3px; }
+.clock-tz {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--faint);
+  margin-top: 12px;
+}
+
+/* ---------- small panels row ---------- */
+.p-weather  { grid-column: span 4; }
+.p-deploy   { grid-column: span 4; }
+.p-runtime  { grid-column: span 4; }
+
+/* weather */
+.wx-top { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.wx-icon { flex-shrink: 0; color: var(--warn); opacity: .9; }
+html[data-theme="dark"] .wx-icon { opacity: .85; }
+.wx-temp {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 3.4vw, 46px);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.wx-cond { font-size: 14px; font-weight: 600; }
+.wx-loc  { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.wx-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.wx-stats .k {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.wx-stats .v { font-size: 14px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+/* deployment */
+.env-row { display: flex; align-items: center; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
+.env-name { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
+.env-chip {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ok);
+  background: var(--ok-soft);
+  border: 1px solid color-mix(in oklch, var(--ok) 30%, transparent);
+  border-radius: 5px;
+  padding: 3px 7px;
+}
+.env-meta { font-size: 13.5px; color: var(--muted); margin-top: 7px; }
+.deploy-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.deploy-facts .k {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.deploy-facts .v {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 5px;
+  letter-spacing: -0.01em;
+}
+.deploy-facts .v.sans { font-family: var(--font-body); font-weight: 600; }
+
+/* runtime */
+.rt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+  margin-top: 12px;
+}
+.rt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rt-row .k { font-size: 13px; color: var(--muted); }
+.rt-row .v {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------- calendar ---------- */
+.p-cal { grid-column: span 12; }
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.cal-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  min-width: 170px;
+  text-align: center;
+  flex: 1;
+}
+.nav-btn {
+  width: 30px; height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: background .15s ease, color .15s ease, transform .1s ease;
+}
+.nav-btn:hover { background: var(--press-bg); color: var(--fg); border-color: var(--border-hi); }
+.nav-btn:active { transform: scale(.93); }
+.today-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: background .15s ease, color .15s ease, transform .1s ease;
+}
+.today-btn:hover { background: var(--press-bg); color: var(--fg); border-color: var(--border-hi); }
+.today-btn:active { transform: scale(.96); }
+
+.cal-weekdays, .cal-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+.cal-weekdays { margin-top: 14px; }
+.cal-weekdays span {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  text-align: center;
+  padding: 6px 0 8px;
+}
+.cal-days { row-gap: 2px; }
+.cal-days.slide-out { animation: cal-out .16s ease forwards; }
+.cal-days.slide-in  { animation: cal-in .22s cubic-bezier(.3,0,.2,1); }
+@keyframes cal-out { to   { opacity: 0; transform: translateY(var(--cal-dir, 6px)); } }
+@keyframes cal-in  { from { opacity: 0; transform: translateY(calc(var(--cal-dir, 6px) * -1)); } }
+.day {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  border-radius: 50%;
+  color: var(--fg);
+  justify-self: center;
+  width: 36px;
+  transition: background .15s ease;
+}
+.day.empty { visibility: hidden; }
+.day.other { color: var(--faint); }
+.day:not(.empty):hover { background: var(--press-bg); cursor: default; }
+.day.today {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent) 35%, transparent);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1024px) {
+  .p-status, .p-clock { grid-column: span 12; }
+  .clock { font-size: clamp(56px, 9vw, 84px); }
+  .clock-wrap { padding-top: clamp(18px, 3vh, 30px); }
+}
+@media (max-width: 860px) {
+  .p-weather, .p-deploy { grid-column: span 6; }
+  .p-runtime { grid-column: span 12; }
+}
+@media (max-width: 640px) {
+  .stage { padding: 0; }
+  .app { border-radius: 0; border-left: 0; border-right: 0; max-width: none; min-height: 100vh; }
+  .p-weather, .p-deploy, .p-runtime { grid-column: span 12; }
+  .toolbar { padding: 10px 12px; gap: 10px; }
+  .toolbar-title { font-size: 12.5px; }
+  .page-header h1 { font-size: 24px; }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .metric:nth-child(3) { grid-column: span 2; border-left: 0; border-top: 1px solid var(--border); padding-top: 10px; }
+  .metric:nth-child(2) { border-left: 1px solid var(--border); }
+  .rt-grid { grid-template-columns: 1fr; }
+  .day { width: 100%; max-width: 44px; height: 44px; }
+  .nav-btn, .today-btn { height: 36px; }
+  .nav-btn { width: 36px; }
+  .cal-title { min-width: 0; font-size: 15.5px; }
+}
+@media (max-width: 380px) {
+  .toolbar-title { display: none; }
+  .clock { font-size: clamp(46px, 15vw, 60px); }
+  .cal-head { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="stage">
+<div class="app">
+
+  <!-- toolbar -->
+  <header class="toolbar">
+    <div class="lights" aria-hidden="true">
+      <span class="light r"></span><span class="light y"></span><span class="light g"></span>
+    </div>
+    <span class="toolbar-title">Server Dashboard</span>
+    <div class="toolbar-actions">
+      <button class="tbtn" id="refreshBtn" title="Refresh server status" aria-label="Refresh">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+        </svg>
+        <span class="lbl">Refresh</span>
+      </button>
+      <button class="tbtn" id="appearanceBtn" aria-haspopup="true" aria-expanded="false" title="Appearance" aria-label="Appearance">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5 5l1.4 1.4M17.6 17.6 19 19M19 5l-1.4 1.4M6.4 17.6 5 19"/>
+        </svg>
+      </button>
+      <div class="popover" id="themePopover" role="menu" aria-label="Appearance">
+        <div class="popover-label">Appearance</div>
+        <button class="opt" role="menuitemradio" data-theme-opt="light" aria-checked="false"><span class="tick">✓</span>Light</button>
+        <button class="opt" role="menuitemradio" data-theme-opt="dark" aria-checked="false"><span class="tick">✓</span>Dark</button>
+        <button class="opt" role="menuitemradio" data-theme-opt="system" aria-checked="false"><span class="tick">✓</span>System</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-body">
+
+    <div class="page-header">
+      <div>
+        <h1>Server Dashboard</h1>
+        <p class="sub">Your deployment at a glance</p>
+      </div>
+      <div class="op-pill"><span class="dot"></span>Operational</div>
+    </div>
+
+    <div class="grid">
+
+      <!-- SYSTEM STATUS -->
+      <section class="panel p-status">
+        <span class="eyebrow">System status</span>
+        <div class="status-hero">
+          <div class="glow" aria-hidden="true"></div>
+          <div class="status-dot" aria-hidden="true"></div>
+          <div class="status-word">Healthy</div>
+          <div class="status-sub">All systems operational</div>
+          <hr class="rule">
+          <div class="metrics">
+            <div class="metric">
+              <div class="k">Response</div>
+              <div class="v"><span id="msVal">38</span><span class="unit">ms</span></div>
+            </div>
+            <div class="metric">
+              <div class="k">Code</div>
+              <div class="v">200 <span class="unit">OK</span></div>
+            </div>
+            <div class="metric">
+              <div class="k">Uptime</div>
+              <div class="v" id="uptimeVal">2h 42m</div>
+            </div>
+          </div>
+        </div>
+        <div class="graph-block">
+          <div class="graph-head">
+            <span>System response</span>
+            <span class="now">Last 60 seconds</span>
+          </div>
+          <svg id="spark" viewBox="0 0 600 64" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" style="stop-color:var(--accent);stop-opacity:.14"/>
+                <stop offset="100%" style="stop-color:var(--accent);stop-opacity:0"/>
+              </linearGradient>
+            </defs>
+            <line class="base" x1="0" y1="63" x2="600" y2="63"/>
+            <path class="area" id="sparkArea" d=""/>
+            <polyline class="line" id="sparkLine" points=""/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- SERVER TIME -->
+      <section class="panel p-clock">
+        <span class="eyebrow">Server time</span>
+        <div class="clock-wrap">
+          <div class="clock" id="clockVal">--:--:--</div>
+          <hr class="rule" style="margin-top: clamp(18px, 2.6vh, 28px);">
+          <div class="clock-meta">
+            <div class="clock-weekday" id="clockWeekday">—</div>
+            <div class="clock-date" id="clockDate">—</div>
+            <div class="clock-tz">Asia/Jakarta · UTC+7</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- WEATHER -->
+      <section class="panel p-weather">
+        <span class="eyebrow">Weather</span>
+        <div class="wx-top">
+          <svg class="wx-icon" width="40" height="40" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <circle cx="30" cy="17" r="8" fill="currentColor" opacity=".9"/>
+            <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".75">
+              <path d="M30 4v3.5M30 26.5V30M17 17h-3.5M46.5 17H43M20.8 7.8l-2.5-2.5M41.7 28.7l-2.5-2.5M39.2 7.8l2.5-2.5M18.3 28.7l2.5-2.5"/>
+            </g>
+            <path d="M14 36a7 7 0 0 1 1.2-13.9 9.5 9.5 0 0 1 18.3 2.4A6.2 6.2 0 0 1 32 36H14z"
+                  fill="currentColor" opacity=".22" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <div class="wx-temp">29°</div>
+          </div>
+          <div>
+            <div class="wx-cond">Partly Cloudy</div>
+            <div class="wx-loc">Jakarta, ID</div>
+          </div>
+        </div>
+        <div class="wx-stats">
+          <div><div class="k">Feels</div><div class="v">31°</div></div>
+          <div><div class="k">Humidity</div><div class="v">72%</div></div>
+          <div><div class="k">Wind</div><div class="v">8 km/h</div></div>
+        </div>
+      </section>
+
+      <!-- DEPLOYMENT -->
+      <section class="panel p-deploy">
+        <span class="eyebrow">Deployment</span>
+        <div class="env-row">
+          <span class="env-name">Production</span>
+          <span class="env-chip">Live</span>
+        </div>
+        <div class="env-meta">Vercel · Singapore (sin1)</div>
+        <div class="deploy-facts">
+          <div><div class="k">Commit</div><div class="v">a81f3e7</div></div>
+          <div><div class="k">Deployed</div><div class="v sans" id="deployedVal">12 minutes ago</div></div>
+        </div>
+      </section>
+
+      <!-- RUNTIME -->
+      <section class="panel p-runtime">
+        <span class="eyebrow">Runtime</span>
+        <div class="rt-grid">
+          <div class="rt-row"><span class="k">Node.js</span><span class="v">22.14</span></div>
+          <div class="rt-row"><span class="k">Memory</span><span class="v">182 MB</span></div>
+          <div class="rt-row"><span class="k">Next.js</span><span class="v">16.0</span></div>
+          <div class="rt-row"><span class="k">Architecture</span><span class="v">arm64</span></div>
+          <div class="rt-row"><span class="k">Platform</span><span class="v">linux</span></div>
+          <div class="rt-row"><span class="k">Uptime</span><span class="v" id="rtUptime">2h 42m</span></div>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="panel p-cal">
+        <span class="eyebrow">Calendar</span>
+        <div class="cal-head">
+          <button class="nav-btn" id="calPrev" aria-label="Previous month">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <div class="cal-title" id="calTitle">Month Year</div>
+          <button class="nav-btn" id="calNext" aria-label="Next month">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button class="today-btn" id="calToday">Today</button>
+        </div>
+        <div class="cal-weekdays" aria-hidden="true">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="cal-days" id="calDays" role="grid" aria-label="Month days"></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (s) => document.querySelector(s);
+
+  /* ================= theme ================= */
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const opts = document.querySelectorAll("[data-theme-opt]");
+  let themePref = localStorage.getItem("sd-theme") || "system";
+
+  function resolve(t) {
+    return t === "system" ? (mq.matches ? "dark" : "light") : t;
+  }
+  function applyTheme() {
+    document.documentElement.dataset.theme = resolve(themePref);
+    opts.forEach((o) => o.setAttribute("aria-checked", String(o.dataset.themeOpt === themePref)));
+  }
+  mq.addEventListener("change", () => { if (themePref === "system") applyTheme(); });
+  opts.forEach((o) => o.addEventListener("click", () => {
+    themePref = o.dataset.themeOpt;
+    localStorage.setItem("sd-theme", themePref);
+    applyTheme();
+    closePopover();
+  }));
+
+  const pop = $("#themePopover"), appBtn = $("#appearanceBtn");
+  function closePopover() { pop.classList.remove("open"); appBtn.setAttribute("aria-expanded", "false"); }
+  appBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = pop.classList.toggle("open");
+    appBtn.setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", (e) => { if (!pop.contains(e.target)) closePopover(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePopover(); });
+  applyTheme();
+
+  /* ================= clock (Asia/Jakarta) ================= */
+  const TZ = "Asia/Jakarta";
+  const fTime = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const fWeek = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" });
+  const fDate = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long", day: "numeric", year: "numeric" });
+
+  function tickClock() {
+    const now = new Date();
+    $("#clockVal").textContent = fTime.format(now);
+    $("#clockWeekday").textContent = fWeek.format(now);
+    $("#clockDate").textContent = fDate.format(now);
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  /* ================= uptime ================= */
+  const boot = Date.now() - (2 * 3600 + 42 * 60) * 1000;
+  function fmtUptime() {
+    const s = Math.floor((Date.now() - boot) / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return h + "h " + String(m).padStart(2, "0") + "m";
+  }
+  function tickUptime() {
+    const t = fmtUptime();
+    $("#uptimeVal").textContent = t;
+    $("#rtUptime").textContent = t;
+  }
+  tickUptime();
+  setInterval(tickUptime, 30000);
+
+  /* ================= latency + sparkline ================= */
+  const N = 60;
+  let latency = 38;
+  const samples = [];
+  for (let i = 0; i < N; i++) {
+    latency = clamp(latency + (Math.random() - 0.5) * 7, 30, 52);
+    samples.push(latency);
+  }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+  const lineEl = $("#sparkLine"), areaEl = $("#sparkArea"), msEl = $("#msVal");
+
+  function drawSpark() {
+    const W = 600, H = 64, min = 24, max = 58;
+    const pts = samples.map((v, i) => {
+      const x = (i / (N - 1)) * W;
+      const y = H - 4 - ((v - min) / (max - min)) * (H - 10);
+      return x.toFixed(1) + "," + y.toFixed(1);
+    });
+    lineEl.setAttribute("points", pts.join(" "));
+    areaEl.setAttribute("d", "M0,64 L" + pts.join(" L") + " L600,64 Z");
+  }
+
+  function pushSample() {
+    latency = clamp(latency + (Math.random() - 0.5) * 8, 31, 51);
+    samples.push(latency);
+    if (samples.length > N) samples.shift();
+    msEl.textContent = Math.round(latency);
+    drawSpark();
+  }
+  drawSpark();
+  msEl.textContent = Math.round(latency);
+  setInterval(pushSample, 1000);
+
+  /* ================= refresh ================= */
+  const rBtn = $("#refreshBtn");
+  rBtn.addEventListener("click", () => {
+    if (rBtn.classList.contains("spin")) return;
+    rBtn.classList.add("spin");
+    setTimeout(() => rBtn.classList.remove("spin"), 750);
+    for (let i = 0; i < 6; i++) pushSample();
+    tickClock();
+    tickUptime();
+    $("#deployedVal").textContent = "12 minutes ago";
+  });
+
+  /* ================= calendar ================= */
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const daysEl = $("#calDays"), titleEl = $("#calTitle");
+  const today = new Date();
+  let viewY = today.getFullYear(), viewM = today.getMonth();
+
+  function renderCalendar(dir) {
+    titleEl.textContent = MONTHS[viewM] + " " + viewY;
+    const first = new Date(viewY, viewM, 1).getDay();          // 0=Sun
+    const daysIn = new Date(viewY, viewM + 1, 0).getDate();
+    const prevDays = new Date(viewY, viewM, 0).getDate();
+    let html = "";
+    for (let i = 0; i < first; i++) {
+      html += '<span class="day empty">' + (prevDays - first + 1 + i) + "</span>";
+    }
+    for (let d = 1; d <= daysIn; d++) {
+      const isToday = d === today.getDate() && viewM === today.getMonth() && viewY === today.getFullYear();
+      html += '<span class="day' + (isToday ? " today" : "") + '"' +
+              (isToday ? ' aria-current="date"' : "") + ">" + d + "</span>";
+    }
+    const rest = (7 - ((first + daysIn) % 7)) % 7;
+    for (let i = 1; i <= rest; i++) html += '<span class="day empty other">' + i + "</span>";
+
+    if (dir) {
+      daysEl.style.setProperty("--cal-dir", dir > 0 ? "8px" : "-8px");
+      daysEl.classList.remove("slide-in", "slide-out");
+      void daysEl.offsetWidth;
+      daysEl.classList.add("slide-out");
+      setTimeout(() => {
+        daysEl.innerHTML = html;
+        daysEl.classList.remove("slide-out");
+        daysEl.classList.add("slide-in");
+      }, 150);
+    } else {
+      daysEl.innerHTML = html;
+    }
+  }
+
+  $("#calPrev").addEventListener("click", () => {
+    viewM--; if (viewM < 0) { viewM = 11; viewY--; }
+    renderCalendar(-1);
+  });
+  $("#calNext").addEventListener("click", () => {
+    viewM++; if (viewM > 11) { viewM = 0; viewY++; }
+    renderCalendar(1);
+  });
+  $("#calToday").addEventListener("click", () => {
+    viewY = today.getFullYear(); viewM = today.getMonth();
+    renderCalendar(0);
+  });
+  renderCalendar(0);
+})();
+</script>
+</body>
+</html>
